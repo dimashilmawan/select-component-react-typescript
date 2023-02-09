@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const classes = {
-	container: `relative flex items-center gap-2 rounded-lg border-2 border-indigo-300 p-2 outline-none focus:ring-2`,
-	value: `flex-1 flex flex-wrap gap-x-3 gap-y-2`,
-	buttonClear: `border-none bg-none p-0 outline-none focus:ring-2`,
-	divider: `w-[2px] self-stretch bg-black`,
-	caret: `translate-y-1/2 border-[6px] border-transparent border-t-black`,
-	options: `absolute top-[calc(100%_+_10px)] left-0 max-h-40 w-full overflow-y-auto rounded-lg z-50 bg-indigo-100`,
+	container: `relative flex items-center gap-2 rounded-lg ring-2 ring-gray-400 p-2 outline-none focus:ring-2 focus:ring-indigo-300`,
+	value: `flex-1 flex flex-wrap gap-x-3 gap-y-2 capitalize text-gray-600 font-semibold`,
+	buttonClear: `border-none bg-none  p-0 outline-none text-xl font-semibold text-gray-400 focus:ring-2 focus:ring-red-400 focus:text-red-400`,
+	divider: `w-[2px] self-stretch bg-gray-400`,
+	caret: `translate-y-1/2 border-[6px] border-transparent border-t-gray-400`,
+	options: `absolute top-[calc(100%_+_10px)] left-0  w-full text-gray-600 capitalize overflow-hidden rounded-lg z-50 bg-indigo-50 ring-1 ring-gray-400`,
 };
 
 export type SelectOption = {
@@ -33,12 +33,46 @@ type SelectProps = {
 const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
+	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		if (isOpen) {
 			setHighlightedIndex(0);
 		}
 	}, [isOpen]);
+
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			if (e.target !== containerRef.current) return;
+			switch (e.code) {
+				case "Enter":
+				case "Space":
+					setIsOpen(prevState => !prevState);
+					if (isOpen) selectOption(options[highlightedIndex]);
+					break;
+				case "ArrowUp":
+				case "ArrowDown": {
+					if (!isOpen) {
+						setIsOpen(true);
+						break;
+					}
+					const newValue = highlightedIndex + (e.code === "ArrowDown" ? 1 : -1);
+					if (newValue >= 0 && newValue < options.length) {
+						setHighlightedIndex(newValue);
+					}
+					break;
+				}
+				case "Escape":
+					setIsOpen(false);
+					break;
+			}
+		};
+		containerRef.current?.addEventListener("keydown", handler);
+
+		return () => {
+			containerRef.current?.removeEventListener("keydown", handler);
+		};
+	}, [isOpen, options, highlightedIndex]);
 
 	const clearOptions = () => {
 		multiple ? onChange([]) : onChange(undefined);
@@ -54,6 +88,8 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 		} else {
 			if (option !== value) onChange(option);
 		}
+
+		setIsOpen(prevState => !prevState);
 	};
 
 	const isOptionSelected = (option: SelectOption) => {
@@ -62,6 +98,7 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 
 	return (
 		<div
+			ref={containerRef}
 			onClick={() => setIsOpen(prevState => !prevState)}
 			onBlur={() => setIsOpen(false)}
 			tabIndex={0}
@@ -72,7 +109,7 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 					? value.map(v => {
 							return (
 								<button
-									className="group flex items-center gap-2 rounded-md px-2 py-1 font-mono text-gray-700 outline-none ring-2 ring-gray-400 hover:scale-110 hover:bg-red-400 hover:text-white"
+									className="group flex items-center gap-2 rounded-md bg-indigo-500 px-2 py-1 font-mono text-white  outline-none  hover:scale-105 hover:bg-red-400 hover:text-white focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
 									key={v.value}
 									onClick={e => {
 										e.stopPropagation();
@@ -81,7 +118,7 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 								>
 									{v.label}
 									<span
-										className={`-translate-y-[1px] p-0 outline-none group-hover:text-white`}
+										className={`-translate-y-[1px] p-0 outline-none group-hover:text-white `}
 									>
 										&times;
 									</span>
@@ -105,10 +142,10 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 				{options.map((option, index) => {
 					return (
 						<li
-							className={`p-2 ${
+							className={`p-2 ${`INDEX---${index}`} ${
 								isOptionSelected(option) ? "bg-indigo-500 text-white" : ""
 							}
-							${highlightedIndex === index ? "bg-indigo-300" : ""}
+							${highlightedIndex === index ? "bg-indigo-400 text-white " : ""}
 							`}
 							onMouseEnter={() => setHighlightedIndex(index)}
 							onClick={e => {
