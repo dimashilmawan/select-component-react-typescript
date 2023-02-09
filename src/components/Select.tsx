@@ -6,7 +6,7 @@ const classes = {
 	buttonClear: `border-none bg-none  p-0 outline-none text-xl font-semibold text-gray-400 focus:ring-2 focus:ring-red-400 focus:text-red-400`,
 	divider: `w-[2px] self-stretch bg-gray-400`,
 	caret: `translate-y-1/2 border-[6px] border-transparent border-t-gray-400`,
-	options: `absolute top-[calc(100%_+_10px)] left-0  w-full text-gray-600 capitalize overflow-hidden rounded-lg z-50 bg-indigo-50 ring-1 ring-gray-400`,
+	options: `absolute max-h-40 overflow-y-auto top-[calc(100%_+_10px)] left-0  w-full text-gray-600 capitalize  rounded-lg z-50 bg-indigo-50 ring-1 ring-gray-400`,
 };
 
 export type SelectOption = {
@@ -34,6 +34,7 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const optionsRef = useRef<HTMLUListElement>(null);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -50,18 +51,29 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 					setIsOpen(prevState => !prevState);
 					if (isOpen) selectOption(options[highlightedIndex]);
 					break;
+
 				case "ArrowUp":
 				case "ArrowDown": {
 					if (!isOpen) {
 						setIsOpen(true);
 						break;
 					}
+
 					const newValue = highlightedIndex + (e.code === "ArrowDown" ? 1 : -1);
 					if (newValue >= 0 && newValue < options.length) {
 						setHighlightedIndex(newValue);
+
+						const selectedOption = optionsRef.current?.querySelector(
+							`.INDEX---${newValue}`
+						);
+						selectedOption?.scrollIntoView({
+							behavior: "auto",
+							block: "nearest",
+						});
 					}
 					break;
 				}
+
 				case "Escape":
 					setIsOpen(false);
 					break;
@@ -138,14 +150,17 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 			</button>
 			<div className={classes.divider} />
 			<div className={classes.caret} />
-			<ul className={`${classes.options} ${isOpen ? "block" : "hidden"}`}>
+			<ul
+				ref={optionsRef}
+				className={`${classes.options} ${isOpen ? "block" : "hidden"}`}
+			>
 				{options.map((option, index) => {
 					return (
 						<li
 							className={`p-2 ${`INDEX---${index}`} ${
 								isOptionSelected(option) ? "bg-indigo-500 text-white" : ""
 							}
-							${highlightedIndex === index ? "bg-indigo-400 text-white " : ""}
+							${highlightedIndex === index ? "active bg-indigo-400 text-white " : ""}
 							`}
 							onMouseEnter={() => setHighlightedIndex(index)}
 							onClick={e => {
