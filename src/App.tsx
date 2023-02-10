@@ -35,7 +35,12 @@ function App() {
 			>
 				Single Select
 			</h1>
-			<Select options={options} value={value2} onChange={o => setValue2(o)} />
+			<Select
+				multiple={false}
+				options={options}
+				value={value2}
+				onChange={o => setValue2(o)}
+			/>
 		</div>
 	);
 }

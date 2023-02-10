@@ -1,32 +1,25 @@
 import { useEffect, useRef, useState } from "react";
-
-const classes = {
-	container: `relative flex items-center gap-2 rounded-lg ring-2 ring-gray-400 p-2 outline-none focus:ring-2 focus:ring-indigo-300`,
-	value: `flex-1 flex flex-wrap gap-x-3 gap-y-2 capitalize text-gray-600 font-semibold`,
-	buttonClear: `border-none bg-none  p-0 outline-none text-xl font-semibold text-gray-400 focus:ring-2 focus:ring-red-400 focus:text-red-400`,
-	divider: `w-[2px] self-stretch bg-gray-400`,
-	caret: `translate-y-1/2 border-[6px] border-transparent border-t-gray-400`,
-	options: `absolute max-h-40 overflow-y-auto top-[calc(100%_+_10px)] left-0  w-full text-gray-600 capitalize  rounded-lg z-50 bg-indigo-50 ring-1 ring-gray-400`,
-};
+import MultipleValue from "./MultipleValue";
+import Value from "./MultipleValue";
 
 export type SelectOption = {
 	label: string;
 	value: number | string;
 };
 
-type SingleSelectProps = {
+export type SingleSelectProps = {
 	multiple?: false;
 	value?: SelectOption;
 	onChange: (value: SelectOption | undefined) => void;
 };
 
-type MultipleSelectProps = {
+export type MultipleSelectProps = {
 	multiple: true;
 	value: SelectOption[];
 	onChange: (value: SelectOption[]) => void;
 };
 
-type SelectProps = {
+export type SelectProps = {
 	options: SelectOption[];
 } & (SingleSelectProps | MultipleSelectProps);
 
@@ -108,51 +101,48 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 		return multiple ? value.includes(option) : option === value;
 	};
 
+	const valueContent = multiple
+		? value?.map((v: SelectOption) => {
+				return (
+					<MultipleValue
+						onSelectOption={selectOption}
+						key={v.value}
+						value={v}
+					/>
+				);
+		  })
+		: value?.label;
 	return (
 		<div
 			ref={containerRef}
 			onClick={() => setIsOpen(prevState => !prevState)}
 			onBlur={() => setIsOpen(false)}
 			tabIndex={0}
-			className={classes.container}
+			className={`relative flex items-center gap-2 rounded-lg p-2 outline-none ring-2 ring-gray-400 focus:ring-2 focus:ring-indigo-300`}
 		>
-			<span className={classes.value}>
-				{multiple
-					? value.map(v => {
-							return (
-								<button
-									className="group flex items-center gap-2 rounded-md bg-indigo-500 px-2 py-1 font-mono text-white  outline-none  hover:scale-105 hover:bg-red-400 hover:text-white focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
-									key={v.value}
-									onClick={e => {
-										e.stopPropagation();
-										selectOption(v);
-									}}
-								>
-									{v.label}
-									<span
-										className={`-translate-y-[1px] p-0 outline-none group-hover:text-white `}
-									>
-										&times;
-									</span>
-								</button>
-							);
-					  })
-					: value?.label}
+			<span
+				className={`flex flex-1 flex-wrap gap-x-3 gap-y-2 font-semibold capitalize text-gray-600`}
+			>
+				{valueContent}
 			</span>
 			<button
 				onClick={e => {
 					e.stopPropagation();
 					clearOptions();
 				}}
-				className={classes.buttonClear}
+				className={`border-none bg-none  p-0 text-xl font-semibold text-gray-400 outline-none focus:text-red-400 focus:ring-2 focus:ring-red-400`}
 			>
 				&times;
 			</button>
-			<div className={classes.divider} />
-			<div className={classes.caret} />
+			<div className={`w-[2px] self-stretch bg-gray-400`} />
+			<div
+				className={`translate-y-1/2 border-[6px] border-transparent border-t-gray-400`}
+			/>
 			<ul
 				ref={optionsRef}
-				className={`${classes.options} ${isOpen ? "block" : "hidden"}`}
+				className={`absolute top-[calc(100%_+_10px)] left-0 z-50 max-h-40  w-full overflow-y-auto rounded-lg  bg-indigo-50 capitalize text-gray-600 ring-1 ring-gray-400 ${
+					isOpen ? "block" : "hidden"
+				}`}
 			>
 				{options.map((option, index) => {
 					return (
@@ -160,7 +150,7 @@ const Select = ({ multiple, value, options, onChange }: SelectProps) => {
 							className={`p-2 ${`INDEX---${index}`} ${
 								isOptionSelected(option) ? "bg-indigo-500 text-white" : ""
 							}
-							${highlightedIndex === index ? "active bg-indigo-400 text-white " : ""}
+							${highlightedIndex === index ? "active !bg-indigo-400  text-white " : ""}
 							`}
 							onMouseEnter={() => setHighlightedIndex(index)}
 							onClick={e => {
